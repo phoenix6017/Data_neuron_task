@@ -1,7 +1,7 @@
 # Requirements.txt
 
-Flask==2.0.2
-gensim==4.2.0
-nltk==3.6.5
+Flask
+gensim
+nltk
 numpy
 pandas
