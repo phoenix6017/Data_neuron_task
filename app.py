@@ -1,53 +1,48 @@
 from flask import Flask, request, jsonify
-from gensim.models.doc2vec import Doc2Vec, TaggedDocument
-from nltk.tokenize import word_tokenize
-import nltk
-import numpy as np 
-import pandas as pd
-nltk.download('punkt')
+from scipy.spatial import distance
+from sentence_transformers import SentenceTransformer
+#Import necessary libraries
+
+#Initialize Flask application
 app = Flask(__name__)
 
-# Your model import and initialization here
-# For demonstration, let's assume a function called calculate_similarity_score(text1, text2) is defined elsewhere
-def model(text1, text2):
-        # Tokenizing the data
-	tokenized_data = [word_tokenize(text1.lower())]
+#Load the pre-trained SentenceTransformer model
+model = SentenceTransformer('roberta-base-nli-stsb-mean-tokens')
 
-	# Creating TaggedDocument objects
-	tagged_data = [TaggedDocument(words=words, tags=[str(idx)])
-				for idx, words in enumerate(tokenized_data)]
+#Function to compare similarity between two texts
+def comparison(text1, text2):
+    #Encode the text2 sentence
+    test_vec = model.encode(text2)
+    
+    #Encode the text1 sentence
+    sentence_vec = model.encode(text1)
+    
+    #Calculate cosine similarity
+    similarity_score = 1 - distance.cosine(test_vec, sentence_vec)
+    
+    #Ensure similarity score is bounded within range
+    similarity_score = max(0, min(similarity_score, 1))
+    
+    return similarity_score
 
-
-	# Training the Doc2Vec model
-	model = Doc2Vec(vector_size=100, window=1, min_count=1, workers=4, epochs=1000)
-	model.build_vocab(tagged_data)
-	model.train(tagged_data, total_examples=model.corpus_count,
-				epochs=model.epochs)
-
-	# Infer vector for a new document
-	new_document = text2
-	#print('Original Document:', new_document)
-
-	inferred_vector = model.infer_vector(word_tokenize(new_document.lower()))
-
-	# Find most similar documents
-	similar_documents = model.dv.most_similar(
-		[inferred_vector], topn=len(model.dv))
-
-	# Print the most similar documents
-	for index, score in similar_documents:
-		return score
+#Define a route to handle POST requests for calculating similarity
 @app.route('/calculate_similarity', methods=['POST'])
 def calculate_similarity():
+    #Extract data from JSON request
     data = request.get_json()
     text1 = data.get('text1', '')
     text2 = data.get('text2', '')
 
-    # Call your model function to calculate similarity score
-    similarity_score = model(text1,text2)
+    #Call the comparison function to calculate similarity score
+    similarity_score = comparison(text1, text2)
 
+    #Prepare response
     response = {'similarity score': abs(similarity_score)}
+    
+    #Return response as JSON
     return jsonify(response)
 
+#Run the Flask app
 if __name__ == '__main__':
+    # Run the Flask app on specified host and port for testing
     app.run(host='0.0.0.0', port=80)
