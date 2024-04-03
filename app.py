@@ -7,7 +7,7 @@ from sentence_transformers import SentenceTransformer
 app = Flask(__name__)
 
 #Load the pre-trained SentenceTransformer model
-model = SentenceTransformer('roberta-base-nli-stsb-mean-tokens')
+model = SentenceTransformer('distilbert-base-nli-stsb-mean-tokens')
 
 #Function to compare similarity between two texts
 def comparison(text1, text2):
@@ -27,6 +27,7 @@ def comparison(text1, text2):
 
 #Define a route to handle POST requests for calculating similarity
 @app.route('/calculate_similarity', methods=['POST'])
+
 def calculate_similarity():
     #Extract data from JSON request
     data = request.get_json()
@@ -37,7 +38,7 @@ def calculate_similarity():
     similarity_score = comparison(text1, text2)
 
     #Prepare response
-    response = {'similarity score': abs(similarity_score)}
+    response = {'similarity score': similarity_score}
     
     #Return response as JSON
     return jsonify(response)
