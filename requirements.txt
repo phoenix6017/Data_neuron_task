@@ -5,3 +5,5 @@ gensim
 nltk
 numpy
 pandas
+scipy
+sentence-transformers
